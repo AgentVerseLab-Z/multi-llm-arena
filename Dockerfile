@@ -15,5 +15,7 @@ COPY --from=builder /app/.next/static ./.next/static
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/data ./data
 COPY --from=builder /app/prisma ./prisma
-EXPOSE 8089
-CMD ["node", "server.js"]
+COPY docker-entrypoint.sh /app/docker-entrypoint.sh
+RUN chmod +x /app/docker-entrypoint.sh
+EXPOSE 3000
+ENTRYPOINT ["/app/docker-entrypoint.sh"]

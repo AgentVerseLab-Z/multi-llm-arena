@@ -107,18 +107,65 @@ npm run dev
 
 打开 http://localhost:3000
 
-## Docker 部署
+## Docker 部署（推荐）
+
+### 一键启动
 
 ```bash
-# 构建镜像
+# 1. 克隆项目
+git clone https://github.com/AgentVerseLab-Z/multi-llm-arena.git
+cd multi-llm-arena
+
+# 2. 创建 .env 文件
+cat > .env << 'EOF'
+# 数据库密码（PostgreSQL）
+POSTGRES_PASSWORD=your_db_password
+
+# 安全密钥（随便填）
+JWT_SECRET=your_jwt_secret
+CAPTCHA_SECRET=your_captcha_secret
+
+# 模型 API Key（至少填一个）
+DASHSCOPE_API_KEY=your_dashscope_key
+
+# 联网搜索（可选）
+BOCHA_API_KEY=your_bocha_key
+EOF
+
+# 3. 一键启动
+docker compose up -d
+```
+
+启动后访问 http://your-server:8089
+
+> 📝 首次启动会自动创建数据库表结构和默认账号（admin/admin123、user/user123）
+
+### 常用命令
+
+```bash
+docker compose up -d          # 启动
+docker compose down            # 停止
+docker compose logs -f app     # 查看日志
+docker compose restart app     # 重启应用
+docker compose pull && docker compose up -d  # 更新
+```
+
+### 单独部署（不用 docker-compose）
+
+如果已有 PostgreSQL，可以直接运行应用容器：
+
+```bash
 docker build -t multi-llm-arena .
 
-# 运行（需要先准备好 PostgreSQL 和 .env）
+# 初始化数据库
+npx prisma db push
+npx tsx prisma/seed.ts
+
+# 启动
 docker run -d \
   --name multi-llm-arena \
   -p 8089:3000 \
   --env-file .env \
-  -v ./data:/app/data \
   --restart unless-stopped \
   multi-llm-arena
 ```
