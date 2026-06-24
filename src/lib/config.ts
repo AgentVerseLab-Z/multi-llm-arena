@@ -23,8 +23,7 @@ export function saveModels(models: ModelConfig[]): void {
 
 /** Strip sensitive fields for frontend */
 export function toPublic(model: ModelConfig): ModelPublic {
-  const { apiKeyEnv: _, ...pub } = model;
-  return pub;
+  return model;
 }
 
 /** Get API key for a model from environment */

@@ -15,7 +15,7 @@ export interface ModelConfig {
 }
 
 /** Public model info (sent to frontend, no sensitive data) */
-export type ModelPublic = Omit<ModelConfig, "apiKeyEnv">;
+export type ModelPublic = ModelConfig;
 
 /** Chat message */
 export interface Message {

@@ -57,8 +57,8 @@ export async function PUT(req: NextRequest) {
     return NextResponse.json({ error: "Model not found" }, { status: 404 });
   }
 
-  // Merge updates (preserve apiKeyEnv)
-  models[idx] = { ...models[idx], ...body, apiKeyEnv: models[idx].apiKeyEnv };
+  // Merge updates (allow apiKeyEnv change)
+  models[idx] = { ...models[idx], ...body };  
   saveModels(models);
 
   return NextResponse.json(toPublic(models[idx]));

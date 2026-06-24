@@ -7,6 +7,13 @@ import type { ModelPublic } from "@/lib/types";
 
 const COLORS = ["#f97316", "#22c55e", "#a855f7", "#3b82f6", "#ec4899", "#eab308", "#14b8a6", "#ef4444", "#6366f1"];
 const ICONS = ["🟠", "🟢", "🟣", "🔵", "🩷", "🟡", "🩵", "🔴", "🟤", "🤖", "🧠", "⚡", "🔥", "💎", "🌟"];
+const API_KEY_OPTIONS = [
+  { value: "DASHSCOPE_API_KEY", label: "阿里云百炼 (DashScope)" },
+  { value: "DEEPSEEK_API_KEY", label: "DeepSeek 官方" },
+  { value: "OPENAI_API_KEY", label: "OpenAI" },
+  { value: "ZHIPU_API_KEY", label: "智谱 GLM" },
+  { value: "MOONSHOT_API_KEY", label: "Moonshot (Kimi)" },
+];
 
 export default function SettingsPage() {
   const router = useRouter();
@@ -242,6 +249,7 @@ function ModelForm({
     name: model?.name || "",
     modelId: model?.modelId || "",
     baseUrl: model?.baseUrl || "https://dashscope.aliyuncs.com/compatible-mode/v1",
+    apiKeyEnv: model?.apiKeyEnv || "DASHSCOPE_API_KEY",
     maxTokens: model?.maxTokens || 4096,
     temperature: model?.temperature ?? 0.7,
     enabled: model?.enabled ?? true,
@@ -278,6 +286,14 @@ function ModelForm({
         <Field label="API 地址" desc="默认使用阿里云百炼平台，可修改为其他 OpenAI 兼容接口">
           <input value={form.baseUrl} onChange={(e) => set("baseUrl", e.target.value)}
             className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="https://dashscope.aliyuncs.com/compatible-mode/v1" />
+        </Field>
+        <Field label="API Key 来源" desc="选择该模型使用的 API Key（对应 .env 中的变量）">
+          <select value={form.apiKeyEnv} onChange={(e) => set("apiKeyEnv", e.target.value)}
+            className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white">
+            {API_KEY_OPTIONS.map((opt) => (
+              <option key={opt.value} value={opt.value}>{opt.label} ({opt.value})</option>
+            ))}
+          </select>
         </Field>
         <Field label="Max Tokens" desc="最大输出 token 数">
           <input type="number" value={form.maxTokens} onChange={(e) => set("maxTokens", +e.target.value)}
