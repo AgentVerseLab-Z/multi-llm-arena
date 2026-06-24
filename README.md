@@ -8,62 +8,158 @@
 - 📢 **统一发送** — 底部输入框一键发送给所有选中模型
 - ✅ **选择性继续** — 勾选/取消单个模型，灵活控制发送目标
 - 💬 **独立提问** — 每个模型窗口可单独追加提问
+- 🌐 **联网搜索** — 支持联网搜索增强（需模型支持 Tool Calling）
 - ⚙️ **Web端配置** — 通过页面可视化增删改模型，无需改代码
 - 🧪 **连接测试** — 一键测试模型 API 是否可用
 
 ## 快速开始
 
+### 1. 安装依赖
+
 ```bash
-# 1. 安装依赖
 npm install
+```
 
-# 2. 配置 API Key
+### 2. 配置环境变量
+
+```bash
 cp .env.example .env
-# 编辑 .env，填入你的 API Key
+```
 
-# 3. 启动开发服务器
+编辑 `.env`，填入以下配置：
+
+#### ⚠️ 数据库配置（必须）
+
+本项目使用 **PostgreSQL**，必须先准备好数据库再启动。
+
+```env
+DATABASE_URL=postgresql://user:password@host:5432/multi_llm_arena?schema=public
+```
+
+**本地开发**（使用 Docker 启动 PostgreSQL）：
+
+```bash
+docker run -d \
+  --name multi-llm-pgsql \
+  -e POSTGRES_USER=arena \
+  -e POSTGRES_PASSWORD=your_password \
+  -e POSTGRES_DB=multi_llm_arena \
+  -p 5432:5432 \
+  -v multi-llm-pgdata:/var/lib/postgresql/data \
+  postgres:16-alpine
+```
+
+然后 `.env` 中填写：
+
+```env
+DATABASE_URL=postgresql://arena:your_password@localhost:5432/multi_llm_arena?schema=public
+```
+
+初始化数据库表结构：
+
+```bash
+npx prisma db push
+npx tsx prisma/seed.ts   # 创建默认管理员 admin/admin123 和普通用户 user/user123
+```
+
+#### 🔑 密钥配置
+
+```env
+JWT_SECRET=your_random_secret_string       # JWT 登录密钥，随便填一个随机字符串
+CAPTCHA_SECRET=your_captcha_secret          # 验证码签名密钥，随便填一个随机字符串
+```
+
+#### 🤖 模型 API Key
+
+根据你使用的模型填写对应的 Key：
+
+```env
+DASHSCOPE_API_KEY=sk-xxx     # 阿里云百炼（Qwen、DeepSeek 等）
+DEEPSEEK_API_KEY=sk-xxx      # DeepSeek 官方
+OPENAI_API_KEY=sk-xxx        # OpenAI
+ZHIPU_API_KEY=xxx            # 智谱 GLM
+MOONSHOT_API_KEY=sk-xxx      # Kimi
+```
+
+> 💡 默认模型配置使用阿里云百炼平台（DashScope API），只需配置 `DASHSCOPE_API_KEY` 即可使用 Qwen 和 DeepSeek。如需接入其他平台，在 Web 端「模型配置」页面修改 API 地址即可。
+
+#### 🌐 联网搜索（可选）
+
+如果需要使用联网搜索功能，需配置 **博查搜索 API**：
+
+```env
+BOCHA_API_KEY=sk-xxx
+```
+
+获取方式：前往 [博查搜索开放平台](https://open.bochaai.com) 注册并创建 API Key。该 Key 用于调用博查的 Web 搜索接口，为模型提供实时联网搜索能力。
+
+> ⚠️ 联网搜索功能需要模型支持 Tool Calling（Function Calling），并非所有模型都支持。在「模型配置」页面可为每个模型单独开关此功能。
+
+### 3. 启动
+
+```bash
 npm run dev
 ```
 
 打开 http://localhost:3000
 
-## 配置说明
+## Docker 部署
 
-### API Key（`.env`）
+```bash
+# 构建镜像
+docker build -t multi-llm-arena .
 
-```env
-QWEN_API_KEY=sk-xxx        # 通义千问
-DEEPSEEK_API_KEY=sk-xxx     # DeepSeek
-OPENAI_API_KEY=sk-xxx       # OpenAI
-ZHIPU_API_KEY=xxx           # 智谱 GLM
-MOONSHOT_API_KEY=sk-xxx     # Kimi
+# 运行（需要先准备好 PostgreSQL 和 .env）
+docker run -d \
+  --name multi-llm-arena \
+  -p 8089:3000 \
+  --env-file .env \
+  -v ./data:/app/data \
+  --restart unless-stopped \
+  multi-llm-arena
 ```
+
+## 配置说明
 
 ### 模型配置（`data/models.json`）
 
 通过 Web 界面（⚙️ 模型配置）管理，也可手动编辑 JSON 文件。
 
 每个模型配置：
+
 ```json
 {
-  "id": "qwen-max",          // 唯一标识
-  "name": "通义千问 Max",      // 显示名称
-  "modelId": "qwen-max",     // API 中的 model 参数
-  "baseUrl": "https://...",  // OpenAI 兼容的 API 地址
-  "apiKeyEnv": "QWEN_API_KEY", // .env 中对应的变量名
-  "maxTokens": 4096,
+  "id": "qwen-max",                    // 唯一标识
+  "name": "通义千问 Max",               // 显示名称
+  "modelId": "qwen-max",              // API 中的 model 参数
+  "baseUrl": "https://dashscope.aliyuncs.com/compatible-mode/v1",  // OpenAI 兼容 API 地址
+  "apiKeyEnv": "DASHSCOPE_API_KEY",   // .env 中对应的变量名
+  "maxTokens": 8192,
   "temperature": 0.7,
   "enabled": true,
   "color": "#f97316",
-  "icon": "🟠"
+  "icon": "🟠",
+  "supportsSearch": true              // 是否支持联网搜索
 }
 ```
+
+### 支持的 API 格式
+
+任何兼容 OpenAI Chat Completions API 格式的接口都可以接入，包括：
+
+- 阿里云百炼（DashScope）
+- DeepSeek 官方
+- OpenAI / Azure OpenAI
+- 智谱 GLM
+- Moonshot (Kimi)
+- 本地部署的 Ollama / vLLM / LiteLLM 等
 
 ## 技术栈
 
 - Next.js 14 (App Router)
 - React 18 + TypeScript
 - Tailwind CSS
+- Prisma + PostgreSQL
 - SSE (Server-Sent Events) 流式输出
 - OpenAI 兼容 API 格式
 
@@ -72,18 +168,33 @@ MOONSHOT_API_KEY=sk-xxx     # Kimi
 ```
 ├── src/
 │   ├── app/
-│   │   ├── page.tsx           # 主对话页面
-│   │   ├── settings/page.tsx  # 模型配置页面
+│   │   ├── page.tsx              # 主对话页面
+│   │   ├── login/page.tsx        # 登录页面
+│   │   ├── settings/page.tsx     # 模型配置页面
+│   │   ├── password/page.tsx     # 修改密码页面
+│   │   ├── admin/users/          # 用户管理
 │   │   └── api/
-│   │       ├── chat/route.ts  # 对话 API（SSE流式）
-│   │       └── models/route.ts # 模型 CRUD API
+│   │       ├── chat/route.ts     # 对话 API（SSE 流式）
+│   │       ├── models/route.ts   # 模型 CRUD API
+│   │       ├── auth/             # 认证相关 API
+│   │       ├── sessions/         # 会话管理
+│   │       └── messages/         # 消息存储
 │   ├── components/
-│   │   ├── ChatPanel.tsx      # 单模型对话面板
-│   │   ├── Header.tsx         # 顶部导航
-│   │   └── MessageBubble.tsx  # 消息气泡
+│   │   ├── ChatPanel.tsx         # 单模型对话面板
+│   │   ├── Header.tsx            # 顶部导航
+│   │   ├── Sidebar.tsx           # 侧边栏（会话列表）
+│   │   ├── ModelSelector.tsx     # 模型选择栏
+│   │   └── MessageBubble.tsx     # 消息气泡
 │   └── lib/
-│       ├── config.ts          # 配置读写
-│       └── types.ts           # 类型定义
-├── data/models.json           # 模型配置（持久化）
-└── .env                       # API Key（不提交到 git）
+│       ├── auth.ts               # JWT 认证
+│       ├── db.ts                 # 数据库连接
+│       ├── config.ts             # 模型配置读写
+│       ├── web-search.ts         # 联网搜索
+│       └── types.ts              # 类型定义
+├── prisma/
+│   ├── schema.prisma             # 数据库模型定义
+│   └── seed.ts                   # 数据库初始化脚本
+├── data/models.json              # 模型配置（持久化，不提交 git）
+├── .env                          # 环境变量（不提交 git）
+└── .env.example                  # 环境变量模板
 ```

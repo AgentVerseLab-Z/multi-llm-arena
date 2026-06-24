@@ -216,10 +216,10 @@ export default function SettingsPage() {
 
         {/* Platform notice */}
         <div className="mt-8 p-4 bg-blue-50 border border-blue-200 rounded-xl text-sm">
-          <div className="font-semibold text-blue-800 mb-1">ℹ️ 当前支持平台</div>
+          <div className="font-semibold text-blue-800 mb-1">💡 提示</div>
           <p className="text-blue-700">
-            当前仅支持<a href="https://bailian.console.aliyun.com" target="_blank" className="underline font-medium">阿里云百炼平台</a>的模型（DashScope API）。
-            如需接入其他平台模型，请联系 <strong>zjq</strong>。
+            默认使用<a href="https://bailian.console.aliyun.com" target="_blank" className="underline font-medium">阿里云百炼平台</a>的 DashScope API。
+            任何兼容 OpenAI Chat Completions 格式的接口均可接入（DeepSeek 官方、OpenAI、智谱、Moonshot、Ollama 等），添加或编辑模型时修改 API 地址即可。
           </p>
         </div>
       </div>
@@ -275,12 +275,9 @@ function ModelForm({
           <input value={form.modelId} onChange={(e) => set("modelId", e.target.value)}
             className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-slate-50 disabled:text-slate-400" placeholder="qwen-max" required />
         </Field>
-        <Field label="API 地址" desc="当前仅支持阿里云百炼平台">
-          <div className="relative">
-            <input value={form.baseUrl} readOnly
-              className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm bg-slate-50 text-slate-500 cursor-not-allowed" />
-            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-400">🔒</span>
-          </div>
+        <Field label="API 地址" desc="默认使用阿里云百炼平台，可修改为其他 OpenAI 兼容接口">
+          <input value={form.baseUrl} onChange={(e) => set("baseUrl", e.target.value)}
+            className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="https://dashscope.aliyuncs.com/compatible-mode/v1" />
         </Field>
         <Field label="Max Tokens" desc="最大输出 token 数">
           <input type="number" value={form.maxTokens} onChange={(e) => set("maxTokens", +e.target.value)}
