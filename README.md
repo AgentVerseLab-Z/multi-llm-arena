@@ -135,25 +135,6 @@ docker compose restart app     # 重启应用
 docker compose pull && docker compose up -d  # 更新
 ```
 
-### 单独部署（不用 docker-compose）
-
-如果已有 PostgreSQL，可以直接运行应用容器：
-
-```bash
-docker build -t multi-llm-arena .
-
-# 初始化数据库
-npx prisma db push
-npx tsx prisma/seed.ts
-
-# 启动
-docker run -d \
-  --name multi-llm-arena \
-  -p 8089:3000 \
-  --env-file .env \
-  --restart unless-stopped \
-  multi-llm-arena
-```
 
 ## 配置说明
 
