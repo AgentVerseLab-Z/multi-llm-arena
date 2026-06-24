@@ -6,15 +6,15 @@ services:
     container_name: multi-llm-pgsql
     restart: unless-stopped
     environment:
-      POSTGRES_USER: arena
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
-      POSTGRES_DB: multi_llm_arena
+      POSTGRES_USER: ${PG_USER:-arena}
+      POSTGRES_PASSWORD: ${PG_PASSWORD:-changeme}
+      POSTGRES_DB: ${PG_DATABASE:-multi_llm_arena}
     volumes:
       - pgdata:/var/lib/postgresql/data
     ports:
-      - "5432:5432"
+      - "${PG_PORT:-5432}:5432"
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U arena -d multi_llm_arena"]
+      test: ["CMD-SHELL", "pg_isready -U ${PG_USER:-arena} -d ${PG_DATABASE:-multi_llm_arena}"]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -24,9 +24,9 @@ services:
     container_name: multi-llm-arena
     restart: unless-stopped
     ports:
-      - "8089:3000"
+      - "${APP_PORT:-8089}:3000"
     environment:
-      DATABASE_URL: postgresql://arena:${POSTGRES_PASSWORD:-changeme}@postgres:5432/multi_llm_arena?schema=public
+      DATABASE_URL: postgresql://${PG_USER:-arena}:${PG_PASSWORD:-changeme}@postgres:5432/${PG_DATABASE:-multi_llm_arena}?schema=public
       JWT_SECRET: ${JWT_SECRET:-change-me-in-production}
       CAPTCHA_SECRET: ${CAPTCHA_SECRET:-change-me-in-production}
       DASHSCOPE_API_KEY: ${DASHSCOPE_API_KEY:-}

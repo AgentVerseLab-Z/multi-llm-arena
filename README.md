@@ -99,18 +99,22 @@ cd multi-llm-arena
 
 # 2. 创建 .env 文件
 cat > .env << 'EOF'
-# 数据库密码（PostgreSQL）
-POSTGRES_PASSWORD=your_db_password
+# ── 数据库配置 ──
+PG_USER=arena                # 数据库用户名（默认 arena）
+PG_PASSWORD=your_db_password # 数据库密码（必填）
+PG_DATABASE=multi_llm_arena  # 数据库名称（默认 multi_llm_arena）
+PG_PORT=5432                 # 数据库端口（默认 5432）
+APP_PORT=8089                # 应用访问端口（默认 8089）
 
-# 安全密钥（随便填）
-JWT_SECRET=your_jwt_secret
-CAPTCHA_SECRET=your_captcha_secret
+# ── 安全密钥（随便填） ──
+JWT_SECRET=your_j…cret
+CAPTCHA_SECRET=your_c…cret
 
-# 模型 API Key（至少填一个）
-DASHSCOPE_API_KEY=your_dashscope_key
+# ── 模型 API Key（至少填一个） ──
+DASHSCOPE_API_KEY=your_d…_key
 
-# 联网搜索（可选）
-BOCHA_API_KEY=your_bocha_key
+# ── 联网搜索（可选） ──
+BOCHA_API_KEY=your_b…_key
 EOF
 
 # 3. 一键启动
