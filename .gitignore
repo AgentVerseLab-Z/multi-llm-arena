@@ -1,0 +1,15 @@
+node_modules/
+.next/
+.env
+.env.local
+.env.docker
+.env.localdocker
+data/models.json
+*.tsbuildinfo
+next-env.d.ts
+/src/generated/prisma
+
+# Deploy scripts (contain server credentials)
+deploy.py
+scripts/tunnel.sh
+/tmp/

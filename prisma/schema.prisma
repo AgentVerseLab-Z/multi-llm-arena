@@ -1,0 +1,39 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id        String   @id @default(cuid())
+  username  String   @unique
+  password  String
+  role      String   @default("user") // "admin" | "user"
+  createdAt DateTime @default(now())
+  sessions  Session[]
+}
+
+model Session {
+  id        String    @id @default(cuid())
+  title     String    @default("新会话")
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  modelIds  String[]  // which models are used
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  messages  Message[]
+}
+
+model Message {
+  id        String   @id @default(cuid())
+  sessionId String
+  session   Session  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  modelId   String?  // null for user messages
+  role      String   // "user" | "assistant"
+  content   String   @default("")
+  latencyMs Int?
+  error     String?
+  createdAt DateTime @default(now())
+}
