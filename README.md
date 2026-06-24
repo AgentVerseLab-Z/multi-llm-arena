@@ -92,6 +92,14 @@ npm run dev
 
 ## Docker 部署（推荐）
 
+### 前置条件
+
+已安装 PostgreSQL，并创建好数据库：
+
+```sql
+CREATE DATABASE multi_llm_arena;
+```
+
 ### 一键启动
 
 ```bash
@@ -101,13 +109,13 @@ cd multi-llm-arena
 
 # 2. 创建 .env 文件
 cat > .env << 'EOF'
-# ── 数据库配置 ──
-PG_HOST=postgres             # 数据库地址（默认 compose 内的 postgres 容器，用已有 PG 改成实际地址）
-PG_USER=arena                # 数据库用户名（默认 arena）
-PG_PASSWORD=your_db_password # 数据库密码（必填）
-PG_DATABASE=multi_llm_arena  # 数据库名称（默认 multi_llm_arena）
-PG_PORT=5432                 # 数据库端口（默认 5432）
-APP_PORT=8089                # 应用访问端口（默认 8089）
+# ── 数据库配置（改成你自己的） ──
+PG_HOST=localhost            # 数据库地址
+PG_USER=arena                # 数据库用户名
+PG_PASSWORD=your_db_password # 数据库密码
+PG_DATABASE=multi_llm_arena  # 数据库名称
+PG_PORT=5432                 # 数据库端口
+APP_PORT=8089                # 应用访问端口
 
 # ── 安全密钥（随便填） ──
 JWT_SECRET=your_j…cret
@@ -127,8 +135,8 @@ docker compose up -d
 启动后访问 http://your-server:8089
 
 > 📝 首次启动会自动创建数据库表结构和默认账号（admin/admin123、user/user123）
-
-> ⚠️ **已有 PostgreSQL 的用户**：如果你的服务器上已经装了 PostgreSQL，可以在 `.env` 中把 `PG_HOST` 改成你的数据库地址（默认是 compose 里的 `postgres` 容器），并注释掉 docker-compose.yml 中的 `postgres` 服务和 `depends_on`，避免启动两个数据库。
+> 
+> 💡 如果数据库在宿主机上，`PG_HOST` 填 `host.docker.internal`（Docker 已自动配置好网络）
 
 ### 常用命令
 
