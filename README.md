@@ -64,10 +64,14 @@ npx tsx prisma/seed.ts   # 创建默认管理员 admin/admin123 和普通用户 
 
 #### 🔑 密钥配置
 
+以下两个密钥用于安全验证，随便填一串随机字符串即可（不是第三方 API Key）：
+
 ```env
-JWT_SECRET=your_random_secret_string       # JWT 登录密钥，随便填一个随机字符串
-CAPTCHA_SECRET=your_captcha_secret          # 验证码签名密钥，随便填一个随机字符串
+JWT_SECRET=any_random_string_here
+CAPTCHA_SECRET=any_random_string_here
 ```
+
+> 💡 比如填 `my-arena-2026` 这种都行，只要保持不为空。
 
 #### 🤖 模型 API Key
 
