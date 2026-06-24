@@ -36,25 +36,6 @@ cp .env.example .env
 DATABASE_URL=postgresql://user:password@host:5432/multi_llm_arena?schema=public
 ```
 
-**本地开发**（使用 Docker 启动 PostgreSQL）：
-
-```bash
-docker run -d \
-  --name multi-llm-pgsql \
-  -e POSTGRES_USER=arena \
-  -e POSTGRES_PASSWORD=your_password \
-  -e POSTGRES_DB=multi_llm_arena \
-  -p 5432:5432 \
-  -v multi-llm-pgdata:/var/lib/postgresql/data \
-  postgres:16-alpine
-```
-
-然后 `.env` 中填写：
-
-```env
-DATABASE_URL=postgresql://arena:your_password@localhost:5432/multi_llm_arena?schema=public
-```
-
 初始化数据库表结构：
 
 ```bash
