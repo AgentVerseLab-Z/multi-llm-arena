@@ -2,6 +2,8 @@
 
 多模型对话对比平台 — 同时与多个大语言模型对话，对比不同模型的回答。
 
+> 📱 **已适配手机端浏览器**，模型选择栏置顶、输入框置底、联网搜索开关可触达，在手机上可以直接使用。
+
 ## 功能
 
 - 🔀 **并排对比** — 多个模型卡片并排显示，实时流式输出
@@ -100,6 +102,7 @@ cd multi-llm-arena
 # 2. 创建 .env 文件
 cat > .env << 'EOF'
 # ── 数据库配置 ──
+PG_HOST=postgres             # 数据库地址（默认 compose 内的 postgres 容器，用已有 PG 改成实际地址）
 PG_USER=arena                # 数据库用户名（默认 arena）
 PG_PASSWORD=your_db_password # 数据库密码（必填）
 PG_DATABASE=multi_llm_arena  # 数据库名称（默认 multi_llm_arena）
@@ -124,6 +127,8 @@ docker compose up -d
 启动后访问 http://your-server:8089
 
 > 📝 首次启动会自动创建数据库表结构和默认账号（admin/admin123、user/user123）
+
+> ⚠️ **已有 PostgreSQL 的用户**：如果你的服务器上已经装了 PostgreSQL，可以在 `.env` 中把 `PG_HOST` 改成你的数据库地址（默认是 compose 里的 `postgres` 容器），并注释掉 docker-compose.yml 中的 `postgres` 服务和 `depends_on`，避免启动两个数据库。
 
 ### 常用命令
 
