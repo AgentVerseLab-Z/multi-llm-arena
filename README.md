@@ -57,14 +57,12 @@ npx tsx prisma/seed.ts   # 创建默认管理员 admin/admin123 和普通用户 
 
 #### 🔑 密钥配置
 
-以下两个密钥用于安全验证，随便填一串随机字符串即可（不是第三方 API Key）：
+以下两个密钥用于安全验证，可直接使用预设值，无需修改：
 
 ```env
-JWT_SECRET=any_random_string_here
-CAPTCHA_SECRET=any_random_string_here
+JWT_SECRET=multi-llm-arena-jwt
+CAPTCHA_SECRET=multi-llm-arena-captcha
 ```
-
-> 💡 比如填 `my-arena-2026` 这种都行，只要保持不为空。
 
 #### 🤖 模型 API Key
 
@@ -103,17 +101,16 @@ cd multi-llm-arena
 cat > .env << 'EOF'
 # ── 数据库配置（改成你自己的） ──
 PG_HOST=localhost            # 数据库地址
-PG_USER=arena                # 数据库用户名
+PG_USER=postgres             # 数据库用户名（默认 postgres）
 PG_PASSWORD=your_db_password # 数据库密码
 PG_DATABASE=multi_llm_arena  # 数据库名称
 PG_PORT=5432                 # 数据库端口
 APP_PORT=8089                # 应用访问端口
 
-# ── 安全密钥（随便填） ──
-JWT_SECRET=your_j…cret
-CAPTCHA_SECRET=your_c…cret
+# ── 安全密钥（有预设值，保持即可） ──
+JWT_SECRET=multi-llm-arena-jwt
+CAPTCHA_SECRET=multi-llm-arena-captcha
 EOF
-
 > 💡 API Key 在启动后登录 ⚙️ 模型配置 → API Key 管理 中配置即可。
 
 # 3. 一键启动

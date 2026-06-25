@@ -8,9 +8,9 @@ services:
     ports:
       - "${APP_PORT:-8089}:3000"
     environment:
-      DATABASE_URL: postgresql://${PG_USER:-arena}:${PG_PASSWORD:-ch…@${PG_HOST:-localhost}:${PG_PORT:-5432}/${PG_DATABASE:-multi_llm_arena}?schema=public
-      JWT_SECRET: ${JWT_SECRET:-change-me}
-      CAPTCHA_SECRET: ${CAPTCHA_SECRET:-change-me}
+      DATABASE_URL: postgresql://${PG_USER:-postgres}:${PG_PASSWORD:-ch…@${PG_HOST:-localhost}:${PG_PORT:-5432}/${PG_DATABASE:-multi_llm_arena}?schema=public
+      JWT_SECRET: ${JWT_SECRET:-multi-llm-arena-jwt}
+      CAPTCHA_SECRET: ${CAPTCHA_SECRET:-multi-llm-arena-captcha}
     volumes:
       - app-data:/app/data
     extra_hosts:
