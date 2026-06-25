@@ -5,26 +5,24 @@ import { API_KEY_PRESETS } from "@/lib/api-presets";
 
 const ENV_PATH = path.join(process.cwd(), ".env");
 
-function readEnvFile(): Record<string, string> {
+function readEnvValue(key: string): string {
+  // Priority: process.env (injected by Docker) > .env file
+  if (process.env[key]) return process.env[key];
   try {
     const content = fs.readFileSync(ENV_PATH, "utf-8");
-    const result: Record<string, string> = {};
     for (const line of content.split("\n")) {
       const trimmed = line.trim();
       if (!trimmed || trimmed.startsWith("#")) continue;
       const eqIdx = trimmed.indexOf("=");
       if (eqIdx === -1) continue;
-      const key = trimmed.slice(0, eqIdx).trim();
-      const val = trimmed.slice(eqIdx + 1).trim();
-      result[key] = val;
+      const k = trimmed.slice(0, eqIdx).trim();
+      if (k === key) return trimmed.slice(eqIdx + 1).trim();
     }
-    return result;
-  } catch {
-    return {};
-  }
+  } catch { /* no .env file */ }
+  return "";
 }
 
-function writeEnvFile(updates: Record<string, string>) {
+function writeEnvFile(key: string, value: string) {
   let content: string;
   try {
     content = fs.readFileSync(ENV_PATH, "utf-8");
@@ -33,24 +31,23 @@ function writeEnvFile(updates: Record<string, string>) {
   }
 
   const lines = content.split("\n");
-  const updatedKeys = new Set<string>();
+  let found = false;
 
   for (let i = 0; i < lines.length; i++) {
     const trimmed = lines[i].trim();
     if (!trimmed || trimmed.startsWith("#")) continue;
     const eqIdx = trimmed.indexOf("=");
     if (eqIdx === -1) continue;
-    const key = trimmed.slice(0, eqIdx).trim();
-    if (key in updates) {
-      lines[i] = `${key}=${updates[key]}`;
-      updatedKeys.add(key);
+    const k = trimmed.slice(0, eqIdx).trim();
+    if (k === key) {
+      lines[i] = `${key}=${value}`;
+      found = true;
+      break;
     }
   }
 
-  for (const [key, val] of Object.entries(updates)) {
-    if (!updatedKeys.has(key)) {
-      lines.push(`${key}=${val}`);
-    }
+  if (!found) {
+    lines.push(`${key}=${value}`);
   }
 
   fs.writeFileSync(ENV_PATH, lines.join("\n"), "utf-8");
@@ -58,16 +55,16 @@ function writeEnvFile(updates: Record<string, string>) {
 
 /** GET — list all API keys (configured status only, no values) */
 export async function GET() {
-  const env = readEnvFile();
   const keys: Record<string, { configured: boolean }> = {};
 
   for (const p of API_KEY_PRESETS) {
-    keys[p.env] = { configured: !!(env[p.env] && env[p.env].length > 0) };
+    const val = readEnvValue(p.env);
+    keys[p.env] = { configured: val.length > 0 };
   }
-  // Also include any extra *_API_KEY or BOCHA_API_KEY in .env
-  for (const [k, v] of Object.entries(env)) {
-    if ((k.endsWith("_API_KEY") || k === "BOCHA_API_KEY") && !keys[k]) {
-      keys[k] = { configured: v.length > 0 };
+  // Also include any extra *_API_KEY or BOCHA_API_KEY
+  for (const k of ["BOCHA_API_KEY"]) {
+    if (!keys[k]) {
+      keys[k] = { configured: readEnvValue(k).length > 0 };
     }
   }
 
@@ -81,8 +78,13 @@ export async function PUT(req: NextRequest) {
     return NextResponse.json({ error: "Missing key or value" }, { status: 400 });
   }
 
-  writeEnvFile({ [body.key]: body.value });
+  // Update runtime env
   process.env[body.key] = body.value;
+
+  // Try to persist to .env file (may fail in read-only containers, but runtime still works)
+  try {
+    writeEnvFile(body.key, body.value);
+  } catch { /* ignore */ }
 
   return NextResponse.json({ ok: true });
 }
