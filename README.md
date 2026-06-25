@@ -101,7 +101,7 @@ cd multi-llm-arena
 cat > .env << 'EOF'
 # ── 数据库配置（改成你自己的） ──
 PG_HOST=localhost            # 数据库地址
-PG_USER=postgres             # 数据库用户名（默认 postgres）
+PG_USER=postgres             # 数据库用户名
 PG_PASSWORD=your_db_password # 数据库密码
 PG_DATABASE=multi_llm_arena  # 数据库名称
 PG_PORT=5432                 # 数据库端口
