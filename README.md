@@ -72,11 +72,7 @@ CAPTCHA_SECRET=any_random_string_here
 
 #### 🌐 联网搜索（可选）
 
-如果需要使用联网搜索功能，需配置 **博查搜索 API**：
-
-```env
-BOCHA_API_KEY=sk-xxx
-```
+开启后模型可获取实时网络信息。需要在 ⚙️ 模型配置 → API Key 管理中配置博查搜索 API Key。
 
 ### 3. 启动
 
