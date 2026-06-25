@@ -62,9 +62,11 @@ CAPTCHA_SECRET=any_random_string_here
 
 > 💡 比如填 `my-arena-2026` 这种都行，只要保持不为空。
 
-#### 🤖 模型 API Key
+#### 🤖 模型 API Key（也可在页面配置）
 
-根据你使用的模型填写对应的 Key：
+启动后登录后台，在 ⚙️ 模型配置 → API Key 管理 中可直接添加/修改，无需重启容器。
+
+如果不通过页面配置，也可以在 `.env` 中预先填写：
 
 ```env
 DASHSCOPE_API_KEY=sk-xxx     # 阿里云百炼（Qwen、DeepSeek 等）
@@ -126,13 +128,9 @@ APP_PORT=8089                # 应用访问端口
 # ── 安全密钥（随便填） ──
 JWT_SECRET=your_j…cret
 CAPTCHA_SECRET=your_c…cret
-
-# ── 模型 API Key（至少填一个） ──
-DASHSCOPE_API_KEY=your_d…_key
-
-# ── 联网搜索（可选） ──
-BOCHA_API_KEY=your_b…_key
 EOF
+
+> 💡 API Key 启动后可在 ⚙️ 模型配置 → API Key 管理 中配置，无需在启动时填写。
 
 # 3. 一键启动
 docker compose up -d

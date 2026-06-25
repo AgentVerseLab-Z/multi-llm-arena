@@ -11,12 +11,11 @@ services:
       DATABASE_URL: postgresql://${PG_USER:-arena}:${PG_PASSWORD:-ch…@${PG_HOST:-localhost}:${PG_PORT:-5432}/${PG_DATABASE:-multi_llm_arena}?schema=public
       JWT_SECRET: ${JWT_SECRET:-change-me}
       CAPTCHA_SECRET: ${CAPTCHA_SECRET:-change-me}
-      DASHSCOPE_API_KEY: ${DASHSCOPE_API_KEY:-}
-      DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY:-}
-      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
-      ZHIPU_API_KEY: ${ZHIPU_API_KEY:-}
-      MOONSHOT_API_KEY: ${MOONSHOT_API_KEY:-}
-      BOCHA_API_KEY: ${BOCHA_API_KEY:-}
+      # API Key 可在页面配置，也可在此预设（非必需）
+      # DASHSCOPE_API_KEY: ${DASHSCOPE_API_KEY:-}
+      # DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY:-}
+      # OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      # BOCHA_API_KEY: ${BOCHA_API_KEY:-}
     volumes:
       - app-data:/app/data
     extra_hosts:

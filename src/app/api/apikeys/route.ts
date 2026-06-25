@@ -3,29 +3,44 @@ import fs from "fs";
 import path from "path";
 import { API_KEY_PRESETS } from "@/lib/api-presets";
 
-const ENV_PATH = path.join(process.cwd(), ".env");
+export const dynamic = "force-dynamic";
 
 function readEnvValue(key: string): string {
-  // Priority: process.env (injected by Docker) > .env file
-  if (process.env[key]) return process.env[key];
   try {
-    const content = fs.readFileSync(ENV_PATH, "utf-8");
+    // Direct process.env check
+    const val = process.env[key];
+    if (val && val.length > 0 && !val.startsWith("your_") && !val.startsWith("***")) {
+      return val;
+    }
+  } catch {}
+  
+  // Fallback: try reading from /app/.env
+  try {
+    const envPath = path.join(process.cwd(), ".env");
+    const content = fs.readFileSync(envPath, "utf-8");
     for (const line of content.split("\n")) {
       const trimmed = line.trim();
       if (!trimmed || trimmed.startsWith("#")) continue;
       const eqIdx = trimmed.indexOf("=");
       if (eqIdx === -1) continue;
       const k = trimmed.slice(0, eqIdx).trim();
-      if (k === key) return trimmed.slice(eqIdx + 1).trim();
+      if (k === key) {
+        const v = trimmed.slice(eqIdx + 1).trim();
+        if (v.length > 0 && !v.startsWith("your_") && !v.startsWith("***")) {
+          return v;
+        }
+      }
     }
-  } catch { /* no .env file */ }
+  } catch {}
+  
   return "";
 }
 
 function writeEnvFile(key: string, value: string) {
+  const envPath = path.join(process.cwd(), ".env");
   let content: string;
   try {
-    content = fs.readFileSync(ENV_PATH, "utf-8");
+    content = fs.readFileSync(envPath, "utf-8");
   } catch {
     content = "";
   }
@@ -50,10 +65,11 @@ function writeEnvFile(key: string, value: string) {
     lines.push(`${key}=${value}`);
   }
 
-  fs.writeFileSync(ENV_PATH, lines.join("\n"), "utf-8");
+  try {
+    fs.writeFileSync(envPath, lines.join("\n"), "utf-8");
+  } catch {}
 }
 
-/** GET — list all API keys (configured status only, no values) */
 export async function GET() {
   const keys: Record<string, { configured: boolean }> = {};
 
@@ -61,7 +77,6 @@ export async function GET() {
     const val = readEnvValue(p.env);
     keys[p.env] = { configured: val.length > 0 };
   }
-  // Also include any extra *_API_KEY or BOCHA_API_KEY
   for (const k of ["BOCHA_API_KEY"]) {
     if (!keys[k]) {
       keys[k] = { configured: readEnvValue(k).length > 0 };
@@ -71,7 +86,6 @@ export async function GET() {
   return NextResponse.json({ keys, presets: API_KEY_PRESETS });
 }
 
-/** PUT — update API key */
 export async function PUT(req: NextRequest) {
   const body = await req.json();
   if (!body.key || typeof body.value !== "string") {
@@ -81,10 +95,8 @@ export async function PUT(req: NextRequest) {
   // Update runtime env
   process.env[body.key] = body.value;
 
-  // Try to persist to .env file (may fail in read-only containers, but runtime still works)
-  try {
-    writeEnvFile(body.key, body.value);
-  } catch { /* ignore */ }
+  // Try to persist to .env file
+  writeEnvFile(body.key, body.value);
 
   return NextResponse.json({ ok: true });
 }
