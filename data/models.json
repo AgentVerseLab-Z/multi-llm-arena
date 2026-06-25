@@ -1,6 +1,6 @@
 [
   {
-    "id": "qwen3.7-max",
+    "id": "1",
     "name": "Qwen 3.7 Max",
     "provider": "qwen",
     "modelId": "qwen3.7-max",
@@ -14,7 +14,7 @@
     "supportsSearch": true
   },
   {
-    "id": "deepseek-v4-pro",
+    "id": "2",
     "name": "DeepSeek V4 Pro",
     "provider": "deepseek",
     "modelId": "deepseek-v4-pro",
@@ -28,7 +28,7 @@
     "supportsSearch": true
   },
   {
-    "id": "glm-5.2",
+    "id": "3",
     "name": "GLM 5.2 (智谱)",
     "provider": "zhipu",
     "modelId": "glm-5.2",
@@ -42,7 +42,7 @@
     "supportsSearch": true
   },
   {
-    "id": "kimi-k2.6",
+    "id": "4",
     "name": "Kimi K2.6 (月之暗面)",
     "provider": "moonshot",
     "modelId": "kimi-k2.6",
@@ -56,7 +56,7 @@
     "supportsSearch": true
   },
   {
-    "id": "MiniMax-M2.5",
+    "id": "5",
     "name": "MiniMax M2.5",
     "provider": "minimax",
     "modelId": "MiniMax-M2.5",
@@ -70,7 +70,7 @@
     "supportsSearch": true
   },
   {
-    "id": "deepseek-v4-flash",
+    "id": "6",
     "name": "DeepSeek V4 Flash",
     "provider": "deepseek",
     "modelId": "deepseek-v4-flash",
@@ -84,7 +84,7 @@
     "supportsSearch": true
   },
   {
-    "id": "qwen3.7-plus",
+    "id": "7",
     "name": "Qwen 3.7 Plus",
     "provider": "qwen",
     "modelId": "qwen3.7-plus",
@@ -98,7 +98,7 @@
     "supportsSearch": true
   },
   {
-    "id": "kimi-k2.7-code",
+    "id": "8",
     "name": "Kimi K2.7 Code (月之暗面)",
     "provider": "moonshot",
     "modelId": "kimi-k2.7-code",

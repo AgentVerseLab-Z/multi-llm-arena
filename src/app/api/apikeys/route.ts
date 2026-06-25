@@ -35,7 +35,6 @@ function writeEnvFile(updates: Record<string, string>) {
   const lines = content.split("\n");
   const updatedKeys = new Set<string>();
 
-  // Update existing keys
   for (let i = 0; i < lines.length; i++) {
     const trimmed = lines[i].trim();
     if (!trimmed || trimmed.startsWith("#")) continue;
@@ -48,7 +47,6 @@ function writeEnvFile(updates: Record<string, string>) {
     }
   }
 
-  // Append new keys
   for (const [key, val] of Object.entries(updates)) {
     if (!updatedKeys.has(key)) {
       lines.push(`${key}=${val}`);
@@ -58,24 +56,25 @@ function writeEnvFile(updates: Record<string, string>) {
   fs.writeFileSync(ENV_PATH, lines.join("\n"), "utf-8");
 }
 
-/** GET — list all API keys (masked) */
+/** GET — list all API keys (configured status only, no values) */
 export async function GET() {
   const env = readEnvFile();
-  const keys: Record<string, { value: string; masked: string }> = {};
+  const keys: Record<string, { configured: boolean }> = {};
 
+  for (const p of API_KEY_PRESETS) {
+    keys[p.env] = { configured: !!(env[p.env] && env[p.env].length > 0) };
+  }
+  // Also include any extra *_API_KEY or BOCHA_API_KEY in .env
   for (const [k, v] of Object.entries(env)) {
-    if (k.endsWith("_API_KEY") || k === "BOCHA_API_KEY") {
-      keys[k] = {
-        value: v,
-        masked: v.length > 8 ? v.slice(0, 4) + "…" + v.slice(-4) : "****",
-      };
+    if ((k.endsWith("_API_KEY") || k === "BOCHA_API_KEY") && !keys[k]) {
+      keys[k] = { configured: v.length > 0 };
     }
   }
 
   return NextResponse.json({ keys, presets: API_KEY_PRESETS });
 }
 
-/** PUT — update API key(s) */
+/** PUT — update API key */
 export async function PUT(req: NextRequest) {
   const body = await req.json();
   if (!body.key || typeof body.value !== "string") {
@@ -83,8 +82,6 @@ export async function PUT(req: NextRequest) {
   }
 
   writeEnvFile({ [body.key]: body.value });
-
-  // Reload env into process.env
   process.env[body.key] = body.value;
 
   return NextResponse.json({ ok: true });

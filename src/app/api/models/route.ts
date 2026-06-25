@@ -8,26 +8,24 @@ export async function GET() {
   return NextResponse.json(models.map(toPublic));
 }
 
-/** POST /api/models — create a new model */
+/** POST /api/models — create a new model (auto-ID) */
 export async function POST(req: NextRequest) {
   const body = await req.json();
   const models = loadModels();
 
-  // Validate required fields
-  if (!body.id || !body.name || !body.modelId || !body.baseUrl) {
+  if (!body.name || !body.modelId || !body.baseUrl) {
     return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
   }
 
-  // Check duplicate id
-  if (models.some((m) => m.id === body.id)) {
-    return NextResponse.json({ error: "Model ID already exists" }, { status: 409 });
-  }
+  // Auto-generate ID: find next available number
+  const existingIds = models.map((m) => parseInt(m.id, 10)).filter((n) => !isNaN(n));
+  const nextId = existingIds.length > 0 ? Math.max(...existingIds) + 1 : 1;
+  const id = String(nextId);
 
-  // Build API key env var name from model id
-  const apiKeyEnv = body.apiKeyEnv || `${body.id.toUpperCase().replace(/-/g, "_")}_API_KEY`;
+  const apiKeyEnv = body.apiKeyEnv || "DASHSCOPE_API_KEY";
 
   const newModel: ModelConfig = {
-    id: body.id,
+    id,
     name: body.name,
     provider: body.provider || "custom",
     modelId: body.modelId,

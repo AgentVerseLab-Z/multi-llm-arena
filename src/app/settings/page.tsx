@@ -14,11 +14,6 @@ interface ApiKeyPreset {
   url: string;
 }
 
-interface ApiKeyInfo {
-  value: string;
-  masked: string;
-}
-
 export default function SettingsPage() {
   const router = useRouter();
   const [models, setModels] = useState<ModelPublic[]>([]);
@@ -28,14 +23,13 @@ export default function SettingsPage() {
   const [testResult, setTestResult] = useState<Record<string, { ok: boolean; msg: string }>>({});
   const [user, setUser] = useState<{ username: string; role: string } | null>(null);
   const [apiKeyPresets, setApiKeyPresets] = useState<ApiKeyPreset[]>([]);
-  const [apiKeyValues, setApiKeyValues] = useState<Record<string, ApiKeyInfo>>({});
+  const [apiKeyStatus, setApiKeyStatus] = useState<Record<string, { configured: boolean }>>({});
 
   const handleLogout = useCallback(async () => {
     await fetch("/api/auth/logout", { method: "POST" });
     router.push("/login");
   }, [router]);
 
-  // Check auth + admin role
   useEffect(() => {
     fetch("/api/auth/me")
       .then((r) => {
@@ -51,7 +45,6 @@ export default function SettingsPage() {
       .catch(() => router.push("/login"));
   }, [router]);
 
-  // Load models
   useEffect(() => {
     fetch("/api/models")
       .then((r) => r.json())
@@ -59,13 +52,12 @@ export default function SettingsPage() {
       .finally(() => setLoading(false));
   }, []);
 
-  // Load API key presets and values
   useEffect(() => {
     fetch("/api/apikeys")
       .then((r) => r.json())
       .then((data) => {
         setApiKeyPresets(data.presets || []);
-        setApiKeyValues(data.keys || {});
+        setApiKeyStatus(data.keys || {});
       })
       .catch(() => {});
   }, []);
@@ -77,17 +69,18 @@ export default function SettingsPage() {
       .then((r) => r.json())
       .then((data) => {
         setApiKeyPresets(data.presets || []);
-        setApiKeyValues(data.keys || {});
+        setApiKeyStatus(data.keys || {});
       })
       .catch(() => {});
   };
 
-  const handleSave = async (data: Partial<ModelPublic> & { id: string; apiKeyEnv?: string }) => {
+  const handleSave = async (data: Partial<ModelPublic> & { id?: string }) => {
     const method = editing ? "PUT" : "POST";
+    const payload = editing ? { ...data, id: editing.id } : data;
     const res = await fetch("/api/models", {
       method,
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data),
+      body: JSON.stringify(payload),
     });
     if (res.ok) {
       refresh();
@@ -97,7 +90,7 @@ export default function SettingsPage() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm(`确定删除模型 "${id}" 吗？`)) return;
+    if (!confirm(`确定删除模型 #${id} 吗？`)) return;
     await fetch(`/api/models?id=${id}`, { method: "DELETE" });
     refresh();
   };
@@ -194,15 +187,16 @@ export default function SettingsPage() {
             onSave={handleSave}
             onCancel={() => { setEditing(null); setShowAdd(false); }}
             apiKeyPresets={apiKeyPresets}
-            apiKeyValues={apiKeyValues}
+            apiKeyStatus={apiKeyStatus}
             onSaveApiKey={handleSaveApiKey}
+            nextId={models.length > 0 ? Math.max(...models.map((m) => parseInt(m.id, 10) || 0)) + 1 : 1}
           />
         )}
 
         {/* API Key Management */}
         <ApiKeyManager
           presets={apiKeyPresets}
-          keys={apiKeyValues}
+          status={apiKeyStatus}
           onSave={handleSaveApiKey}
           onRefresh={refreshKeys}
         />
@@ -220,7 +214,10 @@ export default function SettingsPage() {
                 <div className="flex items-center gap-3">
                   <span className="text-2xl">{model.icon}</span>
                   <div>
-                    <div className="font-semibold text-slate-800">{model.name}</div>
+                    <div className="font-semibold text-slate-800">
+                      {model.name}
+                      <span className="ml-2 text-xs font-normal text-slate-400">#{model.id}</span>
+                    </div>
                     <div className="text-xs text-slate-400 font-mono">
                       {model.modelId} · {model.baseUrl}
                     </div>
@@ -270,7 +267,6 @@ export default function SettingsPage() {
           ))}
         </div>
 
-        {/* Platform notice */}
         <div className="mt-8 p-4 bg-blue-50 border border-blue-200 rounded-xl text-sm">
           <div className="font-semibold text-blue-800 mb-1">💡 提示</div>
           <p className="text-blue-700">
@@ -286,22 +282,21 @@ export default function SettingsPage() {
 /** API Key 管理面板 */
 function ApiKeyManager({
   presets,
-  keys,
+  status,
   onSave,
   onRefresh,
 }: {
   presets: ApiKeyPreset[];
-  keys: Record<string, ApiKeyInfo>;
+  status: Record<string, { configured: boolean }>;
   onSave: (key: string, value: string) => Promise<boolean>;
   onRefresh: () => void;
 }) {
   const [editingKey, setEditingKey] = useState<string | null>(null);
   const [editValue, setEditValue] = useState("");
-  const [showKeys, setShowKeys] = useState<Record<string, boolean>>({});
 
   const handleEdit = (key: string) => {
     setEditingKey(key);
-    setEditValue(keys[key]?.value || "");
+    setEditValue("");
   };
 
   const handleSave = async () => {
@@ -312,14 +307,15 @@ function ApiKeyManager({
     }
   };
 
-  const toggleShow = (key: string) => {
-    setShowKeys((prev) => ({ ...prev, [key]: !prev[key] }));
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter") handleSave();
+    if (e.key === "Escape") { setEditingKey(null); setEditValue(""); }
   };
 
-  // Collect all known keys (presets + any extra keys in .env)
+  // Collect all keys: presets + extras
   const allKeys = new Set<string>();
   presets.forEach((p) => allKeys.add(p.env));
-  Object.keys(keys).forEach((k) => allKeys.add(k));
+  Object.keys(status).forEach((k) => allKeys.add(k));
 
   return (
     <div className="mt-6 border border-slate-200 rounded-xl p-4 bg-white">
@@ -330,8 +326,9 @@ function ApiKeyManager({
       <div className="space-y-2">
         {Array.from(allKeys).map((key) => {
           const preset = presets.find((p) => p.env === key);
-          const info = keys[key];
+          const isConfigured = status[key]?.configured ?? false;
           const isEditing = editingKey === key;
+
           return (
             <div key={key} className="flex items-center gap-3 py-2 px-3 rounded-lg bg-slate-50 text-sm">
               <div className="flex-1 min-w-0">
@@ -344,25 +341,21 @@ function ApiKeyManager({
                     type="password"
                     value={editValue}
                     onChange={(e) => setEditValue(e.target.value)}
+                    onKeyDown={handleKeyDown}
                     className="flex-1 px-2 py-1 border border-slate-300 rounded text-xs font-mono outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="输入 API Key"
+                    placeholder={isConfigured ? "输入新的 Key 覆盖" : "输入 API Key"}
                     autoFocus
                   />
                   <button onClick={handleSave} className="text-xs px-2 py-1 bg-blue-600 text-white rounded hover:bg-blue-700">保存</button>
-                  <button onClick={() => setEditingKey(null)} className="text-xs px-2 py-1 text-slate-500 hover:text-slate-700">取消</button>
+                  <button onClick={() => { setEditingKey(null); setEditValue(""); }} className="text-xs px-2 py-1 text-slate-500 hover:text-slate-700">取消</button>
                 </div>
               ) : (
                 <div className="flex items-center gap-2">
-                  <span className="text-xs font-mono text-slate-500">
-                    {info ? (showKeys[key] ? info.value : info.masked) : "未配置"}
+                  <span className={`text-xs font-mono ${isConfigured ? "text-slate-500" : "text-slate-300 italic"}`}>
+                    {isConfigured ? "*******" : "未配置"}
                   </span>
-                  {info && (
-                    <button onClick={() => toggleShow(key)} className="text-xs text-slate-400 hover:text-slate-600">
-                      {showKeys[key] ? "🙈" : "👁️"}
-                    </button>
-                  )}
                   <button onClick={() => handleEdit(key)} className="text-xs px-2 py-1 border border-slate-200 rounded text-slate-600 hover:bg-white">
-                    {info ? "✏️" : "+ 配置"}
+                    {isConfigured ? "✏️ 修改" : "+ 配置"}
                   </button>
                 </div>
               )}
@@ -380,22 +373,22 @@ function ModelForm({
   onSave,
   onCancel,
   apiKeyPresets,
-  apiKeyValues,
+  apiKeyStatus,
   onSaveApiKey,
+  nextId,
 }: {
   model: ModelPublic | null;
   onSave: (data: any) => void;
   onCancel: () => void;
   apiKeyPresets: ApiKeyPreset[];
-  apiKeyValues: Record<string, ApiKeyInfo>;
+  apiKeyStatus: Record<string, { configured: boolean }>;
   onSaveApiKey: (key: string, value: string) => Promise<boolean>;
+  nextId: number;
 }) {
-  // Determine initial URL mode
   const initialPreset = apiKeyPresets.find((p) => p.env === model?.apiKeyEnv);
   const isCustomUrl = model?.baseUrl && !apiKeyPresets.some((p) => p.url === model.baseUrl);
 
   const [form, setForm] = useState({
-    id: model?.id || "",
     name: model?.name || "",
     modelId: model?.modelId || "",
     urlMode: isCustomUrl ? "custom" : (model?.apiKeyEnv || "DASHSCOPE_API_KEY"),
@@ -411,10 +404,6 @@ function ModelForm({
     supportsSearch: model?.supportsSearch ?? true,
   });
 
-  const [keyInput, setKeyInput] = useState("");
-  const [showKeyInput, setShowKeyInput] = useState(false);
-
-  // Sync URL when apiKey preset changes (if not custom)
   const handleApiKeyModeChange = (mode: string) => {
     set("apiKeyMode", mode);
     if (mode !== "custom") {
@@ -428,23 +417,19 @@ function ModelForm({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // If custom API key, save it first
     if (form.apiKeyMode === "custom" && form.customApiKeyEnv && form.customApiKey) {
       await onSaveApiKey(form.customApiKeyEnv, form.customApiKey);
     }
 
-    // Resolve baseUrl
     let baseUrl = form.customUrl;
     if (form.urlMode !== "custom") {
       const preset = apiKeyPresets.find((p) => p.env === form.urlMode);
       baseUrl = preset?.url || form.customUrl;
     }
 
-    // Resolve apiKeyEnv
     const apiKeyEnv = form.apiKeyMode === "custom" ? form.customApiKeyEnv : form.apiKeyMode;
 
     onSave({
-      id: form.id,
       name: form.name,
       modelId: form.modelId,
       baseUrl,
@@ -463,20 +448,16 @@ function ModelForm({
   return (
     <form onSubmit={handleSubmit} className="mb-6 border-2 border-blue-200 rounded-xl p-6 bg-blue-50/30">
       <h3 className="text-lg font-semibold text-slate-800 mb-4">
-        {model ? "编辑模型" : "添加新模型"}
+        {model ? `编辑模型 #${model.id}` : `添加新模型 #${nextId}`}
       </h3>
       <div className="grid grid-cols-2 gap-4">
-        <Field label="模型 ID *" desc="唯一标识，如 qwen-max">
-          <input value={form.id} onChange={(e) => set("id", e.target.value)} disabled={!!model}
-            className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-slate-50 disabled:text-slate-400" placeholder="my-model" required />
-        </Field>
         <Field label="显示名称 *" desc="前端显示用">
           <input value={form.name} onChange={(e) => set("name", e.target.value)}
-            className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-slate-50 disabled:text-slate-400" placeholder="通义千问 Max" required />
+            className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="通义千问 Max" required />
         </Field>
         <Field label="模型标识 *" desc="API 中的 model 参数">
           <input value={form.modelId} onChange={(e) => set("modelId", e.target.value)}
-            className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-slate-50 disabled:text-slate-400" placeholder="qwen-max" required />
+            className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="qwen-max" required />
         </Field>
 
         {/* API 地址 */}
@@ -486,8 +467,7 @@ function ModelForm({
             onChange={(e) => {
               set("urlMode", e.target.value);
               if (e.target.value !== "custom") {
-                const preset = apiKeyPresets.find((p) => p.env === e.target.value);
-                if (preset) set("customUrl", "");
+                set("customUrl", "");
               }
             }}
             className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white mb-2"
@@ -509,7 +489,7 @@ function ModelForm({
         </Field>
 
         {/* API Key */}
-        <Field label="API Key" desc="选择已配置的 Key，或自定义输入新的">
+        <Field label="API Key" desc="选择已配置的 Key，或自定义输入">
           <select
             value={form.apiKeyMode}
             onChange={(e) => handleApiKeyModeChange(e.target.value)}
@@ -517,7 +497,7 @@ function ModelForm({
           >
             {apiKeyPresets.map((p) => (
               <option key={p.env} value={p.env}>
-                {p.label} {apiKeyValues[p.env] ? "✅" : "⚠️ 未配置"}
+                {p.label} {apiKeyStatus[p.env]?.configured ? "✅" : "⚠️ 未配置"}
               </option>
             ))}
             <option value="custom">自定义</option>
@@ -532,24 +512,22 @@ function ModelForm({
                 placeholder="API Key 值" required />
             </div>
           ) : (
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-mono text-slate-500">
-                {apiKeyValues[form.apiKeyMode]
-                  ? (showKeyInput ? apiKeyValues[form.apiKeyMode].value : apiKeyValues[form.apiKeyMode].masked)
-                  : "未配置 — 请先在下方 API Key 管理中配置"}
-              </span>
+            <div className="text-xs text-slate-500 px-1">
+              {apiKeyStatus[form.apiKeyMode]?.configured
+                ? <span className="font-mono">*******  ✅ 已配置</span>
+                : <span className="text-orange-500">⚠️ 未配置，请先在下方 API Key 管理中配置</span>}
             </div>
           )}
         </Field>
 
         <Field label="Max Tokens" desc="最大输出 token 数">
           <input type="number" value={form.maxTokens} onChange={(e) => set("maxTokens", +e.target.value)}
-            className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-slate-50 disabled:text-slate-400" min={1} max={32768} />
+            className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" min={1} max={32768} />
         </Field>
         <Field label="Temperature" desc="生成温度 0-2">
           <input type="number" step="0.1" value={form.temperature}
             onChange={(e) => set("temperature", +e.target.value)}
-            className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-slate-50 disabled:text-slate-400" min={0} max={2} />
+            className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" min={0} max={2} />
         </Field>
         <Field label="图标" desc="选择一个 emoji">
           <div className="flex flex-wrap gap-2">
@@ -575,7 +553,7 @@ function ModelForm({
             ))}
           </div>
         </Field>
-        <Field label="联网搜索" desc="开启后用户可对该模型使用联网搜索（需模型支持 Tool Calling）">
+        <Field label="联网搜索" desc="开启后可使用联网搜索（需模型支持 Tool Calling）">
           <button type="button" onClick={() => set("supportsSearch", !form.supportsSearch)}
             className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium border-2 transition-colors ${
               form.supportsSearch
