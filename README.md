@@ -22,6 +22,10 @@
 
 ## 快速开始
 
+> 🎯 **项目已预置 8 个模型配置**（Qwen 3.7 Max、DeepSeek V4 Pro、GLM 5.2、Kimi K2.6 等），基于阿里云百炼平台（DashScope），只需配置一个 `DASHSCOPE_API_KEY` 即可使用。
+> 
+> 🌐 **联网搜索**需要额外配置博查搜索 API Key（`BOCHA_API_KEY`），在 ⚙️ 模型配置 → API Key 管理中配置。
+
 ### 1. 安装依赖
 
 ```bash
@@ -147,11 +151,11 @@ docker compose pull && docker compose up -d  # 更新
 
 ```json
 {
-  "id": "qwen-max",                    // 唯一标识
-  "name": "通义千问 Max",               // 显示名称
-  "modelId": "qwen-max",              // API 中的 model 参数
+  "id": "1",                          // 自动编号（1, 2, 3...）
+  "name": "Qwen 3.7 Max",              // 显示名称
+  "modelId": "qwen3.7-max",            // API 中的 model 参数
   "baseUrl": "https://dashscope.aliyuncs.com/compatible-mode/v1",  // OpenAI 兼容 API 地址
-  "apiKeyEnv": "DASHSCOPE_API_KEY",   // .env 中对应的变量名
+  "apiKeyEnv": "DASHSCOPE_API_KEY",    // 对应的环境变量名
   "maxTokens": 8192,
   "temperature": 0.7,
   "enabled": true,
