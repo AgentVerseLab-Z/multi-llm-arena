@@ -62,21 +62,9 @@ CAPTCHA_SECRET=any_random_string_here
 
 > 💡 比如填 `my-arena-2026` 这种都行，只要保持不为空。
 
-#### 🤖 模型 API Key（也可在页面配置）
+#### 🤖 模型 API Key
 
-启动后登录后台，在 ⚙️ 模型配置 → API Key 管理 中可直接添加/修改，无需重启容器。
-
-如果不通过页面配置，也可以在 `.env` 中预先填写：
-
-```env
-DASHSCOPE_API_KEY=sk-xxx     # 阿里云百炼（Qwen、DeepSeek 等）
-DEEPSEEK_API_KEY=sk-xxx      # DeepSeek 官方
-OPENAI_API_KEY=sk-xxx        # OpenAI
-ZHIPU_API_KEY=xxx            # 智谱 GLM
-MOONSHOT_API_KEY=sk-xxx      # Kimi
-```
-
-> 💡 默认模型配置使用阿里云百炼平台（DashScope API），只需配置 `DASHSCOPE_API_KEY` 即可使用 Qwen 和 DeepSeek。如需接入其他平台，在 Web 端「模型配置」页面修改 API 地址即可。
+启动后登录后台，在 ⚙️ 模型配置 → API Key 管理 中直接添加即可，无需在启动时配置。
 
 #### 🌐 联网搜索（可选）
 
@@ -85,10 +73,6 @@ MOONSHOT_API_KEY=sk-xxx      # Kimi
 ```env
 BOCHA_API_KEY=sk-xxx
 ```
-
-获取方式：前往 [博查搜索开放平台](https://open.bochaai.com) 注册并创建 API Key。该 Key 用于调用博查的 Web 搜索接口，为模型提供实时联网搜索能力。
-
-> ⚠️ 联网搜索功能需要模型支持 Tool Calling（Function Calling），并非所有模型都支持。在「模型配置」页面可为每个模型单独开关此功能。
 
 ### 3. 启动
 
@@ -130,7 +114,7 @@ JWT_SECRET=your_j…cret
 CAPTCHA_SECRET=your_c…cret
 EOF
 
-> 💡 API Key 启动后可在 ⚙️ 模型配置 → API Key 管理 中配置，无需在启动时填写。
+> 💡 API Key 在启动后登录 ⚙️ 模型配置 → API Key 管理 中配置即可。
 
 # 3. 一键启动
 docker compose up -d
