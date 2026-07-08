@@ -107,3 +107,53 @@ body {
   font-size: 13px;
 }
 .markdown-body th { background: #f8fafc; font-weight: 600; }
+
+/* Mobile markdown styles */
+.mobile-markdown {
+  line-height: 1.7;
+  color: var(--text);
+  overflow-wrap: anywhere;
+}
+.mobile-markdown p { margin-bottom: 8px; }
+.mobile-markdown p:last-child { margin-bottom: 0; }
+.mobile-markdown code {
+  background: #e2e8f0;
+  padding: 2px 5px;
+  border-radius: 5px;
+  font-size: 12px;
+  font-family: "SF Mono", "Fira Code", monospace;
+}
+.mobile-markdown pre {
+  max-width: 100%;
+  overflow-x: auto;
+  background: #0f172a;
+  color: #e2e8f0;
+  padding: 12px;
+  border-radius: 12px;
+  margin: 8px 0;
+}
+.mobile-markdown pre code {
+  background: transparent;
+  padding: 0;
+  color: inherit;
+}
+.mobile-markdown ul, .mobile-markdown ol { padding-left: 18px; margin: 6px 0; }
+.mobile-markdown blockquote {
+  border-left: 3px solid #cbd5e1;
+  padding-left: 10px;
+  color: var(--text-secondary);
+  margin: 8px 0;
+}
+.mobile-markdown table {
+  display: block;
+  width: 100%;
+  overflow-x: auto;
+  border-collapse: collapse;
+  margin: 8px 0;
+}
+.mobile-markdown th, .mobile-markdown td {
+  border: 1px solid #e2e8f0;
+  padding: 6px 8px;
+  font-size: 12px;
+  white-space: nowrap;
+}

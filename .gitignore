@@ -13,3 +13,6 @@ next-env.d.ts
 deploy.py
 scripts/tunnel.sh
 /tmp/
+
+.DS_Store
+AGENTS.md
