@@ -40,7 +40,10 @@ cp .env.example .env
 
 #### ⚠️ 数据库配置（必须）
 
-本项目使用 **PostgreSQL**，必须先准备好数据库再启动。
+本项目使用 **PostgreSQL**，服务启动和数据库初始化是分开的：
+
+- `docker compose up -d` 只负责启动服务
+- 首次部署或结构变更后，需要手动执行数据库初始化命令
 
 ```env
 DATABASE_URL=postgresql://user:password@host:5432/multi_llm_arena?schema=public
@@ -49,8 +52,13 @@ DATABASE_URL=postgresql://user:password@host:5432/multi_llm_arena?schema=public
 初始化数据库表结构：
 
 ```bash
-npx prisma db push
-npx tsx prisma/seed.ts   # 创建默认管理员 admin/admin123 和普通用户 user/user123
+npm run db:init
+```
+
+初始化默认账号：
+
+```bash
+npm run db:seed-users   # 创建默认管理员 admin/admin123 和普通用户 user/user123
 ```
 
 #### 🔑 密钥配置
@@ -88,7 +96,7 @@ npm run dev
 CREATE DATABASE multi_llm_arena;
 ```
 
-### 一键启动
+### 首次部署
 
 ```bash
 # 1. 克隆项目
@@ -109,26 +117,46 @@ APP_PORT=8089                # 应用访问端口
 JWT_SECRET=multi-llm-arena-jwt
 CAPTCHA_SECRET=multi-llm-arena-captcha
 EOF
-> 💡 API Key 在启动后登录 ⚙️ 模型配置 → API Key 管理 中配置即可。
 
-# 3. 一键启动
+# 3. 启动服务（只启动容器，不自动改数据库）
 docker compose up -d
+
+# 4. 初始化数据库表结构
+docker compose exec app npm run db:init
+
+# 5. 初始化默认账号
+docker compose exec app npm run db:seed-users
 ```
+
+> 💡 API Key 在启动后登录 ⚙️ 模型配置 → API Key 管理 中配置即可。
+>
+> 💡 如果数据库在宿主机上，`PG_HOST` 填 `host.docker.internal`（Docker 已自动配置好网络）
 
 启动后访问 http://your-server:8089
 
-> 📝 首次启动会自动创建数据库表结构和默认账号（admin/admin123、user/user123）
-> 
-> 💡 如果数据库在宿主机上，`PG_HOST` 填 `host.docker.internal`（Docker 已自动配置好网络）
+### 后续更新
+
+```bash
+# 拉取新代码后重新构建并重启服务
+docker compose up -d --build
+
+# 只有数据库结构有变化时，才手动执行
+docker compose exec app npm run db:init
+
+# 只有确认需要补默认账号时，才手动执行
+docker compose exec app npm run db:seed-users
+```
 
 ### 常用命令
 
 ```bash
-docker compose up -d          # 启动
-docker compose down            # 停止
-docker compose logs -f app     # 查看日志
-docker compose restart app     # 重启应用
-docker compose pull && docker compose up -d  # 更新
+docker compose up -d                 # 启动
+docker compose up -d --build         # 更新代码后重建并启动
+docker compose down                  # 停止
+docker compose logs -f app           # 查看日志
+docker compose restart app           # 重启应用
+docker compose exec app npm run db:init        # 初始化/同步数据库表
+docker compose exec app npm run db:seed-users  # 初始化默认账号
 ```
 
 
@@ -206,7 +234,11 @@ docker compose pull && docker compose up -d  # 更新
 │       └── types.ts              # 类型定义
 ├── prisma/
 │   ├── schema.prisma             # 数据库模型定义
-│   └── seed.ts                   # 数据库初始化脚本
+│   └── seed.ts                   # 默认账号初始化脚本
+├── scripts/
+│   ├── init-db.sh                # 手动初始化/同步数据库表结构
+│   ├── seed-users.sh             # 手动初始化默认账号
+│   └── tunnel.sh                 # SSH 隧道脚本
 ├── data/models.json              # 模型配置（持久化，不提交 git）
 ├── .env                          # 环境变量（不提交 git）
 └── .env.example                  # 环境变量模板

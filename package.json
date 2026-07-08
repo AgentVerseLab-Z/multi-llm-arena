@@ -6,6 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
+    "start:docker": "node server.js",
+    "db:init": "prisma db push --url \"$DATABASE_URL\"",
+    "db:seed-users": "tsx prisma/seed.ts",
     "lint": "next lint"
   },
   "dependencies": {
