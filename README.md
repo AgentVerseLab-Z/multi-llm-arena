@@ -106,11 +106,7 @@ cd multi-llm-arena
 # 2. 创建 .env 文件
 cat > .env << 'EOF'
 # ── 数据库配置（改成你自己的） ──
-PG_HOST=localhost            # 数据库地址
-PG_USER=postgres             # 数据库用户名
-PG_PASSWORD=your_db_password # 数据库密码
-PG_DATABASE=multi_llm_arena  # 数据库名称
-PG_PORT=5432                 # 数据库端口
+DATABASE_URL=postgresql://user:password@host:5432/multi_llm_arena?schema=public
 APP_PORT=8089                # 应用访问端口
 
 # ── 安全密钥（有预设值，保持即可） ──
@@ -130,7 +126,7 @@ docker compose exec app npm run db:seed-users
 
 > 💡 API Key 在启动后登录 ⚙️ 模型配置 → API Key 管理 中配置即可。
 >
-> 💡 如果数据库在宿主机上，`PG_HOST` 填 `host.docker.internal`（Docker 已自动配置好网络）
+> 💡 如果数据库在宿主机上，`DATABASE_URL` 里的 host 可填 `host.docker.internal`（Docker 已自动配置好网络）
 
 启动后访问 http://your-server:8089
 
